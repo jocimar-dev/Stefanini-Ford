@@ -1,12 +1,15 @@
 package com.stefanini.api;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class TaskRequest {
 
     @NotBlank
+    @Size(max = 255)
     private String title;
 
+    @Size(max = 1000)
     private String description;
 
     private String status;

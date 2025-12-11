@@ -1,9 +1,13 @@
 package com.stefanini.application;
 
 import com.stefanini.domain.Task;
+import com.stefanini.domain.TaskStatus;
 import com.stefanini.infrastructure.TaskRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -29,9 +33,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Task> findAll() {
-        return taskRepository.findAll();
+    public Page<Task> search(TaskStatus status, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+        Page<Task> page = taskRepository.search(status, from, to, pageable);
+        log.info("Tasks fetched status={} from={} to={} page={} size={} total={}",
+                status, from, to, pageable.getPageNumber(), pageable.getPageSize(), page.getTotalElements());
+        return page;
     }
 
     @Override
