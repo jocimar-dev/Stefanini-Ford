@@ -66,8 +66,15 @@ curl -X POST http://localhost:8080/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Study","description":"Spring Boot","status":"PENDING"}'
 ```
-- `docker-compose` commands são os mesmos.
-- Certifique-se de usar senha com `!` entre aspas simples ou escape (`Ford123!` -> `'Ford123!'`).
+- `docker-compose` commands are the same.
+- For passwords with `!`, wrap in single quotes or escape (`Ford123!` -> `'Ford123!'`).
+
+### Logs and checks
+- Tail API logs: `docker-compose logs -f todo-api`
+- Tail DB logs: `docker-compose logs -f sqlserver`
+- Healthcheck (ALB/ECS): `/api/tasks`
+- Quick DB check inside container:  
+  `docker exec todo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Ford123!' -C -Q "SELECT name FROM sys.databases"`
 
 ## Tests
 ```sh
