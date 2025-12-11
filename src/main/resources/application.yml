@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://${DB_HOST:localhost}:1433;databaseName=${DB_NAME:todo_db};encrypt=false
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:Ford123!}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+    show-sql: true
+
+  flyway:
+    enabled: false

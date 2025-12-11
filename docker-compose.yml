@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: todo-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Ford123!"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Ford123!", "-Q", "SELECT 1", "-C"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  todo-api:
+    build: .
+    container_name: todo-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      DB_HOST: "sqlserver"
+      DB_NAME: "todo_db"
+      DB_USER: "sa"
+      DB_PASSWORD: "Ford123!"
+    ports:
+      - "8080:8080"
+
+volumes:
+  mssql-data: {}
