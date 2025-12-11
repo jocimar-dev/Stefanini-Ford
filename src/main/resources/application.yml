@@ -15,3 +15,12 @@ spring:
 
   flyway:
     enabled: false
+
+app:
+  security:
+    jwt:
+      secret: "change-me-please-32chars-minimum-change-me-please"
+      expiration: 3600000 # 1h in ms
+    user:
+      username: admin
+      password: admin123
