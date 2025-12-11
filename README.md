@@ -73,3 +73,7 @@ mvn test
 - Fluxo resumido: criar branch `feature/...` a partir de `develop` -> desenvolver e commitar -> abrir PR para `develop` -> merge -> release para `main` quando pronto.
 - Commits: use prefixos semanticos `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`.
 - Ajuste de commits: reescrita de historico (squash/rebase) so manualmente via Git (`git rebase -i`) e alinhado com o time; nao automatizamos aqui.
+
+## Deploy / Infra (resumo)
+- ECS Fargate com ALB + RDS (SQL Server) está descrito em `terraform/` (custa: NAT, ALB e SQL Server). Só execute `terraform apply` se quiser realmente provisionar; o `plan` é suficiente para demonstrar conhecimento.
+- Para demo local sem custo, use `LOCALSTACK.md` (simula SSM/ECR) e o `docker-compose` já existente. O app roda localmente com SQL Server em contêiner; comandos `awslocal` mostram como faria param store/repos.
