@@ -2,9 +2,9 @@ version: "3.9"
 
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2019-latest
+    image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: todo-sqlserver
-    environment:
+    environment: 
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "Ford123!"
     ports:
