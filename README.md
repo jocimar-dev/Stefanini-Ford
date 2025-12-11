@@ -59,6 +59,16 @@ curl.exe -X PUT http://localhost:8080/api/tasks/1 `
 ```
 - Delete: `curl.exe -X DELETE http://localhost:8080/api/tasks/1`
 
+### Linux note
+- Use `curl` (without `.exe`) and replace backticks with backslashes:
+```bash
+curl -X POST http://localhost:8080/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Study","description":"Spring Boot","status":"PENDING"}'
+```
+- `docker-compose` commands são os mesmos.
+- Certifique-se de usar senha com `!` entre aspas simples ou escape (`Ford123!` -> `'Ford123!'`).
+
 ## Tests
 ```sh
 ./mvnw test
