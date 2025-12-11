@@ -116,3 +116,6 @@ Outputs: `alb_dns_name` (API at `http://alb_dns_name/api/tasks`) and `rds_endpoi
 - Main: `main`
 - Development: `develop`
 - Features: `feature/<name>`
+
+## Commit messages (semantic)
+- Use prefixos como `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:` para facilitar o histórico e automação.
