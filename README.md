@@ -1,121 +1,75 @@
 # To-Do API
 
-RESTful API for task management (create, list, update, delete) using Java 17, Spring Boot 3, SQL Server, Flyway, and Docker.
+RESTful API for task management (create, list, update, partial update, delete) using Java 17, Spring Boot 3, SQL Server, JPA, JWT, and Docker.
 
 ## Requirements
 - Java 17+
-- Maven Wrapper (`./mvnw`)
-- Docker (optional for running SQL Server and the API)
+- Maven (`mvn`)
+- Docker + Docker Compose (optional for SQL Server/API)
 
-## Project structure / architecture
-- Layers follow a clean-ish separation:
-  - `api` (controllers, DTOs)
-  - `application` (services/use cases)
-  - `domain` (entities, enums)
-  - `infrastructure` (repositories)
-- Persistence: JPA + SQL Server, schema managed by Flyway migrations (`src/main/resources/db/migration`).
-- REST: Spring Web, validation on DTOs.
+## Configuration
+Defaults in `src/main/resources/application.yml` (override via env vars):
+- DB host: `${DB_HOST:localhost}` (compose: `sqlserver`)
+- DB name: `${DB_NAME:todo_db}`
+- DB user: `${DB_USER:sa}`
+- DB password: `${DB_PASSWORD:Ford123!}`
+- JWT: `app.security.jwt.*`
+- Default user: `admin` / `admin123`
 
-## Database config
-- Defaults in `src/main/resources/application.yml`:
-  - host: `sqlserver` (docker-compose) or `localhost`
-  - database: `todo_db`
-  - user: `sa`
-  - password: `Ford123!`
+## Running
+1) Start SQL Server via Compose: `docker compose up -d sqlserver`
+2) Ensure DB exists: `docker exec todo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Ford123!" -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name='todo_db') CREATE DATABASE todo_db;"`
+3) Run API locally: `mvn spring-boot:run`
+4) (Optional) All via Compose: `docker compose up -d --build`
 
-### Run everything via docker-compose (API + SQL Server 2019)
+API: `http://localhost:8080`  
+Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+Actuator (monitoring): `http://localhost:8080/actuator` (health is public; others require Bearer token)
+
+## Auth (JWT)
+- Login: `POST /api/auth/login` body `{"username":"admin","password":"admin123"}`
+- Response: `{"token":"<JWT>"}`
+- Use header `Authorization: Bearer <JWT>` on all protected endpoints.
+- No Swagger UI, clique em "Authorize", escolha `bearerAuth` e informe o token nesse formato: `Bearer <JWT>`.
+
+## Endpoints (curl examples)
+- Login (get token):
 ```sh
-docker-compose up -d --build
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
 ```
-API: `http://localhost:8080/api/tasks`  
-DB: `localhost:1433`
-
-### Run SQL Server manually (Docker)
+- Create task (example using token):
 ```sh
-docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Ford123!" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-latest
-docker exec <container> /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Ford123!" -C -Q "CREATE DATABASE todo_db"
-```
-
-### Run the API locally (no Docker)
-```sh
-./mvnw spring-boot:run
-```
-Ensure SQL Server is reachable; adjust `spring.datasource` if host/credentials change.
-
-## Endpoints (curl on PowerShell)
-- Create
-```powershell
-curl.exe -X POST http://localhost:8080/api/tasks `
-  -H "Content-Type: application/json" `
-  -d "{\"title\":\"Study\",\"description\":\"Spring Boot\",\"status\":\"PENDING\"}"
-```
-- List: `curl.exe http://localhost:8080/api/tasks`
-- Get by id: `curl.exe http://localhost:8080/api/tasks/1`
-- Update
-```powershell
-curl.exe -X PUT http://localhost:8080/api/tasks/1 `
-  -H "Content-Type: application/json" `
-  -d "{\"title\":\"Study\",\"description\":\"Spring Boot 3\",\"status\":\"IN_PROGRESS\"}"
-```
-- Delete: `curl.exe -X DELETE http://localhost:8080/api/tasks/1`
-
-### Linux note
-- Use `curl` (without `.exe`) and replace backticks with backslashes:
-```bash
 curl -X POST http://localhost:8080/api/tasks \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT>" \
   -d '{"title":"Study","description":"Spring Boot","status":"PENDING"}'
 ```
-- `docker-compose` commands are the same.
-- For passwords with `!`, wrap in single quotes or escape (`Ford123!` -> `'Ford123!'`).
+Use Swagger UI for the rest of the operations (list, get by id, put, patch, delete) with the same `Authorization: Bearer <JWT>` header.
 
-### Logs and checks
-- Tail API logs: `docker-compose logs -f todo-api`
-- Tail DB logs: `docker-compose logs -f sqlserver`
-- Healthcheck (ALB/ECS): `/api/tasks`
-- Quick DB check inside container:  
-  `docker exec todo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Ford123!' -C -Q "SELECT name FROM sys.databases"`
+## Actuator
+- Exposed endpoints: `health` (public), `info`, `metrics`, `env`, `httpexchanges`, `threaddump` (require JWT).
+- Base URL: `http://localhost:8080/actuator`
+- Example with token:  
+  `curl http://localhost:8080/actuator/metrics -H "Authorization: Bearer <JWT>"`
+
+## Logs
+- API: `docker compose logs -f todo-api`
+- DB: `docker compose logs -f sqlserver`
 
 ## Tests
 ```sh
-./mvnw test
+mvn test
 ```
 
 ## CI/CD (GitHub Actions)
-Workflow `.github/workflows/ci.yml`:
-- `mvn clean verify`
-- Build Docker image
-- Push to GHCR (tags `latest` and commit SHA) on branch `main`
+`.github/workflows/ci.yml` runs `mvn clean verify`, builds Docker image, and publishes to GHCR (tags `latest` and commit SHA) on pushes to `main`.
+- Releases via tag: hoje o workflow dispara só em `main` (push/PR). Se quiser build/publicar ao criar tags (ex. `v0.1.0`), ajuste o gatilho em `on:` para incluir `push: tags: ['v*']` e referencie a tag no build/push da imagem. Sem isso, criar a tag não dispara pipeline automaticamente.
+- Criar release/tag localmente (exemplo): `git checkout main && git pull && git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0`.
 
-## Deploy on AWS (Terraform skeleton)
-Folder `terraform/` includes:
-- ECS Fargate (API container on port 8080)
-- ALB HTTP 80 with healthcheck at `/api/tasks`
-- RDS SQL Server 2019 Express (`todo_db`)
-- CloudWatch Logs
-
-Example `terraform.tfvars`:
-```
-aws_region        = "us-east-1"
-vpc_id            = "<your-vpc>"
-public_subnet_ids = ["subnet-a", "subnet-b"]
-private_subnet_ids = ["subnet-c", "subnet-d"]
-db_username       = "sa"
-db_password       = "Ford123!"
-image             = "ghcr.io/<owner>/todo-api:latest"
-```
-Run:
-```sh
-cd terraform
-terraform init
-terraform apply
-```
-Outputs: `alb_dns_name` (API at `http://alb_dns_name/api/tasks`) and `rds_endpoint`.
-
-## GitFlow
-- Main: `main`
-- Development: `develop`
-- Features: `feature/<name>`
-
-## Commit messages (semantic)
-- Use prefixos como `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:` para facilitar o histórico e automação.
+## Git flow / commits
+- Branches: `main` (production), `develop` (integra develop), `feature/<name>` (cada demanda).
+- Fluxo resumido: criar branch `feature/...` a partir de `develop` -> desenvolver e commitar -> abrir PR para `develop` -> merge -> release para `main` quando pronto.
+- Commits: use prefixos semanticos `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`.
+- Ajuste de commits: reescrita de historico (squash/rebase) so manualmente via Git (`git rebase -i`) e alinhado com o time; nao automatizamos aqui.
