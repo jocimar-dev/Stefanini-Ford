@@ -3,3 +3,8 @@ target/
 .vscode/
 *.iml
 *.log
+/.terraform/
+terraform/.terraform/
+*.tfstate
+*.tfstate.backup
+terraform/.terraform.lock.hcl
