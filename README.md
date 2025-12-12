@@ -29,7 +29,7 @@ Valores padrao em `src/main/resources/application.yml` (sobreponha via env vars)
 - DB password: `${DB_PASSWORD:Ford123!}`
 - JWT: `app.security.jwt.*`
 - Default user: `admin` / `admin123`
-- Cloud opcional: SSM/SQS com LocalStack em `LOCALSTACK_TESTING.md`.
+- Cloud opcional: SSM/SQS com LocalStack em `docs/LOCALSTACK_TESTING.md`.
 
 ## Como rodar
 1) Subir SQL Server via Compose:
@@ -103,7 +103,7 @@ Requer Docker em execucao para os testes de integracao (Testcontainers com SQL S
 ## CI/CD
 - `Main CI - Build & Publish` (`.github/workflows/ci.yml`): `mvn clean verify`, build e push para GHCR em `main`.
 - `Dev CI - Build & Publish` (`.github/workflows/dev.yml`): mesmo fluxo para `develop`, publica tags `dev` e `dev-<sha>`.
-- `Release - Tag Build & Publish` (`.github/workflows/release.yml`): em tags `v*`, builda e publica imagens `:vX` e `:latest`.
+- `Release - Tag Build & Publish` (`.github/workflows/release.yml`): em tags `v*`, builda e publica imagens `:vX` e `:latest`. O deploy para produção exige aprovação manual do aprovador configurado no ambiente protegido no GitHub Actions; sem aprovação, a publicação não prossegue.
 
 ## Git flow / commits
 
@@ -115,7 +115,7 @@ Requer Docker em execucao para os testes de integracao (Testcontainers com SQL S
 | Releases  | `release/vX.Y.Z` a partir de `develop`, PR para `main` e `develop`, tag `vX.Y.Z` na `main` |
 
 ## Cloud opcional (LocalStack)
-Guia completo em [`LOCALSTACK_TESTING.md`](LOCALSTACK_TESTING.md) (subir LocalStack, credenciais dummy, defaults no `application.yml`, comandos `awslocal` para SSM/SQS).
+Guia completo em [`docs/LOCALSTACK_TESTING.md`](docs/LOCALSTACK_TESTING.md) (subir LocalStack, credenciais dummy, defaults no `application.yml`, comandos `awslocal` para SSM/SQS).
 
 ## Infra resumo
 - Terraform em `terraform/` descreve ECS Fargate + ALB + RDS (SQL Server). Gera custo real (NAT/ALB/RDS); use `terraform plan` para demonstrar, aplique apenas se quiser provisionar.
