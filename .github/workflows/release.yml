@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - "v*"
+  release:
+    types: [published]   # ao publicar Release na UI
+  workflow_dispatch:     # permitir acionar manualmente
 
 permissions:
   contents: read
@@ -14,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/todo-api
-      VERSION: ${{ github.ref_name }}
+      VERSION: ${{ github.event.release.tag_name || github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,7 +38,7 @@ jobs:
     environment: production  # configure reviewers no ambiente "production"
     env:
       IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/todo-api
-      VERSION: ${{ github.ref_name }}
+      VERSION: ${{ github.event.release.tag_name || github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
