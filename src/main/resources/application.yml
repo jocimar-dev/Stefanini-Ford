@@ -14,7 +14,7 @@ spring:
     show-sql: true
 
   flyway:
-    enabled: false
+    enabled: true
 
 app:
   security:
@@ -24,3 +24,18 @@ app:
     user:
       username: admin
       password: admin123
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - env
+          - httpexchanges
+          - threaddump
+  endpoint:
+    health:
+      show-details: always

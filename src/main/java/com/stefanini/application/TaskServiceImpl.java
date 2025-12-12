@@ -62,6 +62,23 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public Task patch(Long id, Task partial) {
+        Task existing = findById(id);
+        if (partial.getTitle() != null) {
+            existing.setTitle(partial.getTitle());
+        }
+        if (partial.getDescription() != null) {
+            existing.setDescription(partial.getDescription());
+        }
+        if (partial.getStatus() != null) {
+            existing.setStatus(partial.getStatus());
+        }
+        Task saved = taskRepository.save(existing);
+        log.info("Task patched id={} title={} status={}", saved.getId(), saved.getTitle(), saved.getStatus());
+        return saved;
+    }
+
+    @Override
     public void delete(Long id) {
         Task existing = findById(id);
         taskRepository.delete(existing);

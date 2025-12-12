@@ -17,5 +17,7 @@ public interface TaskService {
 
     Task update(Long id, Task updated);
 
+    Task patch(Long id, Task partial);
+
     void delete(Long id);
 }
