@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 jobs:
-  build-and-release:
+  build-and-test:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/todo-api
@@ -28,6 +28,17 @@ jobs:
 
       - name: Build & test
         run: mvn -B -DskipTests=false clean verify
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: production  # configure reviewers no ambiente "production"
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/todo-api
+      VERSION: ${{ github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
