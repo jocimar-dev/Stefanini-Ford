@@ -25,6 +25,21 @@ app:
       username: admin
       password: admin123
 
+  aws:
+    ssm:
+      enabled: ${APP_AWS_SSM_ENABLED:false} # set true to fetch DB creds from SSM/LocalStack
+      region: ${APP_AWS_SSM_REGION:us-east-1}
+      endpoint: ${APP_AWS_SSM_ENDPOINT:http://localhost:4566} # LocalStack default
+      db-host-param: ${APP_AWS_SSM_DB_HOST_PARAM:/todo/db/host}
+      db-name-param: ${APP_AWS_SSM_DB_NAME_PARAM:/todo/db/name}
+      db-user-param: ${APP_AWS_SSM_DB_USER_PARAM:/todo/db/user}
+      db-password-param: ${APP_AWS_SSM_DB_PASSWORD_PARAM:/todo/db/password}
+    sqs:
+      enabled: ${APP_AWS_SQS_ENABLED:false} # toggle publishing
+      queue-url: ${APP_AWS_SQS_QUEUE_URL:http://localhost:4566/000000000000/todo-events}
+      region: ${APP_AWS_SQS_REGION:us-east-1}
+      endpoint: ${APP_AWS_SQS_ENDPOINT:http://localhost:4566}
+
 management:
   endpoints:
     web:

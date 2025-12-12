@@ -3,6 +3,7 @@ package com.stefanini.application;
 import com.stefanini.domain.Task;
 import com.stefanini.domain.TaskStatus;
 import com.stefanini.infrastructure.TaskRepository;
+import com.stefanini.infrastructure.messaging.TaskEventPublisher;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
@@ -19,15 +20,18 @@ public class TaskServiceImpl implements TaskService {
     private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskRepository taskRepository;
+    private final TaskEventPublisher taskEventPublisher;
 
-    public TaskServiceImpl(TaskRepository taskRepository) {
+    public TaskServiceImpl(TaskRepository taskRepository, TaskEventPublisher taskEventPublisher) {
         this.taskRepository = taskRepository;
+        this.taskEventPublisher = taskEventPublisher;
     }
 
     @Override
     public Task create(Task task) {
         Task created = taskRepository.save(task);
         log.info("Task created id={} title={} status={}", created.getId(), created.getTitle(), created.getStatus());
+        taskEventPublisher.taskCreated(created);
         return created;
     }
 
@@ -57,6 +61,7 @@ public class TaskServiceImpl implements TaskService {
         existing.setStatus(updated.getStatus());
         Task saved = taskRepository.save(existing);
         log.info("Task updated id={} title={} status={}", saved.getId(), saved.getTitle(), saved.getStatus());
+        taskEventPublisher.taskUpdated(saved);
         return saved;
     }
 
@@ -74,6 +79,7 @@ public class TaskServiceImpl implements TaskService {
         }
         Task saved = taskRepository.save(existing);
         log.info("Task patched id={} title={} status={}", saved.getId(), saved.getTitle(), saved.getStatus());
+        taskEventPublisher.taskPatched(saved);
         return saved;
     }
 
@@ -82,5 +88,6 @@ public class TaskServiceImpl implements TaskService {
         Task existing = findById(id);
         taskRepository.delete(existing);
         log.info("Task deleted id={} title={}", existing.getId(), existing.getTitle());
+        taskEventPublisher.taskDeleted(existing);
     }
 }
