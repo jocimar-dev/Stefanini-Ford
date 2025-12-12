@@ -10,14 +10,7 @@ terraform/.terraform/
 *.tfstate
 *.tfstate.backup
 terraform/.terraform.lock.hcl
-<<<<<<< HEAD
 terraform/.terraform/
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
-=======
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
-
 instructions.pdf
-instructions.pdf
->>>>>>> 2ecb4c86401b71889f635b3d9a15a5c9c72c15fe
