@@ -13,38 +13,24 @@ provider "aws" {
 }
 
 data "aws_caller_identity" "current" {}
-data "aws_availability_zones" "available" {}
 
 locals {
   name = "todo-api"
-  azs  = slice(data.aws_availability_zones.available.names, 0, 2)
-
-  # /16 VPC -> gera /24 públicas nos primeiros índices e /24 privadas a partir do 10
-  public_subnets  = [for idx in range(length(local.azs)) : cidrsubnet(var.vpc_cidr, 8, idx)]
-  private_subnets = [for idx in range(length(local.azs)) : cidrsubnet(var.vpc_cidr, 8, idx + 10)]
 }
 
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "5.1.2"
+# VPC and subnets must existir e ser passados por variável (use VPC com internet para ALB).
+data "aws_vpc" "selected" {
+  id = var.vpc_id
+}
 
-  name = "${local.name}-vpc"
-  cidr = var.vpc_cidr
-
-  azs             = local.azs
-  public_subnets  = local.public_subnets
-  private_subnets = local.private_subnets
-
-  enable_nat_gateway   = true
-  single_nat_gateway   = true
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+data "aws_subnets" "selected" {
+  ids = var.public_subnet_ids
 }
 
 resource "aws_security_group" "alb" {
   name        = "${local.name}-alb-sg"
   description = "ALB ingress 80/443"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.aws_vpc.selected.id
 
   ingress {
     from_port   = 80
@@ -64,7 +50,7 @@ resource "aws_security_group" "alb" {
 resource "aws_security_group" "ecs_tasks" {
   name        = "${local.name}-ecs-sg"
   description = "ECS tasks to DB/ALB"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.aws_vpc.selected.id
 
   ingress {
     from_port       = 8080
@@ -84,7 +70,7 @@ resource "aws_security_group" "ecs_tasks" {
 resource "aws_security_group" "rds" {
   name        = "${local.name}-rds-sg"
   description = "SQL Server ingress from ECS"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.aws_vpc.selected.id
 
   ingress {
     from_port       = 1433
@@ -103,7 +89,7 @@ resource "aws_security_group" "rds" {
 
 resource "aws_db_subnet_group" "rds" {
   name       = "${local.name}-rds-subnets"
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids = var.private_subnet_ids
 }
 
 resource "aws_db_instance" "sqlserver" {
@@ -180,17 +166,17 @@ resource "aws_lb" "this" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = module.vpc.public_subnets
+  subnets            = data.aws_subnets.selected.ids
 }
 
 resource "aws_lb_target_group" "this" {
   name        = "${local.name}-tg"
   port        = 8080
   protocol    = "HTTP"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.aws_vpc.selected.id
   target_type = "ip"
   health_check {
-    path                = "/actuator/health"
+    path                = "/api/tasks"
     healthy_threshold   = 2
     unhealthy_threshold = 2
     interval            = 15
@@ -245,7 +231,7 @@ resource "aws_ecs_service" "this" {
   deployment_maximum_percent         = 200
 
   network_configuration {
-    subnets         = module.vpc.private_subnets
+    subnets         = var.private_subnet_ids
     security_groups = [aws_security_group.ecs_tasks.id]
     assign_public_ip = false
   }
