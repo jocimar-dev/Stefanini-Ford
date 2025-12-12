@@ -67,8 +67,23 @@ mvn test
 Requer Docker em execução para os testes de integração (Testcontainers com SQL Server).
 
 ## CI/CD (GitHub Actions)
-`.github/workflows/ci.yml` runs `mvn clean verify`, builds Docker image, and publishes to GHCR (tags `latest` and commit SHA) on pushes to `main`.
-- Para publicar ao criar tags (ex. `v0.1.0`), adicione no gatilho `push: tags: ['v*']` e use a tag no build/push da imagem. Exemplo: `git checkout main && git pull && git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0`.
+- `Main CI - Build & Publish` (`.github/workflows/ci.yml`): executa `mvn clean verify`, builda imagem e publica `latest` + SHA no GHCR em pushes para `main`.
+- `Dev CI - Build & Publish` (`.github/workflows/dev.yml`): mesmo fluxo para `develop`, publica tags `dev` e `dev-<sha>`.
+- `Release - Tag Build & Publish` (`.github/workflows/release.yml`): dispara em tags `v*`, builda e publica imagem `:vX` e `:latest`.
+
+### Release (Gitflow)
+1) Merge da feature no `develop`.
+2) Criar branch de release a partir do develop:
+   - `git switch -c release/v1.0.0 develop`
+   - `git push -u origin release/v1.0.0`
+3) Abrir PR `release/v1.0.0` -> `main` e fazer merge.
+4) Abrir PR `release/v1.0.0` -> `develop` para reintegrar.
+5) Tag na `main` (aciona workflow de release):
+   - `git tag v1.0.0`
+   - `git push origin v1.0.0`
+6) Atualizar branches locais:
+   - `git switch develop && git pull`
+   - `git switch main && git pull`
 
 ## Git flow / commits
 - Branches: `main` (production), `develop` (integra develop), `feature/<name>` (cada demanda).
