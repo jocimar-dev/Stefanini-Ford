@@ -3,6 +3,14 @@ target/
 .vscode/
 *.iml
 *.log
+
+# Terraform artifacts
+.terraform/
 terraform/.terraform/
+*.tfstate
+*.tfstate.backup
+terraform/.terraform.lock.hcl
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
+
+instructions.pdf
