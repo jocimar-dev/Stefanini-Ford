@@ -20,6 +20,7 @@ Defaults in `src/main/resources/application.yml` (override via env vars):
 1) Start SQL Server via Compose: `docker compose up -d sqlserver`
 2) Ensure DB exists: `docker exec todo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Ford123!" -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name='todo_db') CREATE DATABASE todo_db;"`
 3) Run API locally: `mvn spring-boot:run`
+   - Flyway está habilitado (`spring.flyway.enabled=true`) e aplica as migrations automaticamente na inicialização; basta que o banco `todo_db` exista.
 4) (Optional) All via Compose: `docker compose up -d --build`
 
 API: `http://localhost:8080`  
@@ -63,10 +64,11 @@ Use Swagger UI for the rest of the operations (list, get by id, put, patch, dele
 mvn test
 ```
 
+Requer Docker em execução para os testes de integração (Testcontainers com SQL Server).
+
 ## CI/CD (GitHub Actions)
 `.github/workflows/ci.yml` runs `mvn clean verify`, builds Docker image, and publishes to GHCR (tags `latest` and commit SHA) on pushes to `main`.
-- Releases via tag: hoje o workflow dispara só em `main` (push/PR). Se quiser build/publicar ao criar tags (ex. `v0.1.0`), ajuste o gatilho em `on:` para incluir `push: tags: ['v*']` e referencie a tag no build/push da imagem. Sem isso, criar a tag não dispara pipeline automaticamente.
-- Criar release/tag localmente (exemplo): `git checkout main && git pull && git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0`.
+- Para publicar ao criar tags (ex. `v0.1.0`), adicione no gatilho `push: tags: ['v*']` e use a tag no build/push da imagem. Exemplo: `git checkout main && git pull && git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0`.
 
 ## Git flow / commits
 - Branches: `main` (production), `develop` (integra develop), `feature/<name>` (cada demanda).
