@@ -1,6 +1,6 @@
 # To-Do API
 
-RESTful API for task management (create, list, update, partial update, delete) built with Java 17 and Spring Boot 3. Uses SQL Server (JPA/Flyway), JWT security, Docker/Compose for local run, optional LocalStack (SSM/SQS) as a cloud demo, and Terraform for AWS infra reference.
+API RESTful para gerenciamento de tarefas (criar, listar, atualizar, atualizar parcialmente, excluir) desenvolvida com Java 17 e Spring Boot 3. Utiliza SQL Server (JPA/Flyway), segurança JWT, Docker/Compose para execução local, LocalStack (SSM/SQS) opcional para demonstração em nuvem e Terraform para infraestrutura AWS.
 
 ## Indice
 - [Requisitos](#requisitos)
