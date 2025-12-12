@@ -1,81 +1,122 @@
 # To-Do API
 
-RESTful API for task management (create, list, update, partial update, delete) using Java 17, Spring Boot 3, SQL Server, JPA, JWT, and Docker.
+API RESTful para gerenciamento de tarefas (criar, listar, atualizar, atualizar parcialmente, excluir) desenvolvida com Java 17 e Spring Boot 3. Utiliza SQL Server (JPA/Flyway), segurança JWT, Docker/Compose para execução local, LocalStack (SSM/SQS) opcional para demonstração em nuvem e Terraform para infraestrutura AWS.
 
-## Requirements
+## Indice
+- [Requisitos](#requisitos)
+- [Configuracao](#configuracao)
+- [Como rodar](#como-rodar)
+- [Autenticacao (JWT)](#autenticacao-jwt)
+- [Endpoints principais](#endpoints-principais)
+- [Actuator](#actuator)
+- [Logs](#logs)
+- [Testes](#testes)
+- [CI/CD](#cicd)
+- [Git flow / commits](#git-flow--commits)
+- [Cloud opcional (LocalStack)](#cloud-opcional-localstack)
+- [Infra (resumo)](#infra-resumo)
+
+## Requisitos
 - Java 17+
-- Maven (`mvn`)
-- Docker + Docker Compose (optional for SQL Server/API)
+-- Maven
+- Docker + Docker Compose (para SQL Server/API)
 
-## Configuration
-Defaults in `src/main/resources/application.yml` (override via env vars):
+## Configuracao
+Valores padrao em `src/main/resources/application.yml` (sobreponha via env vars):
 - DB host: `${DB_HOST:localhost}` (compose: `sqlserver`)
 - DB name: `${DB_NAME:todo_db}`
 - DB user: `${DB_USER:sa}`
 - DB password: `${DB_PASSWORD:Ford123!}`
 - JWT: `app.security.jwt.*`
 - Default user: `admin` / `admin123`
+- Cloud opcional: SSM/SQS com LocalStack em `LOCALSTACK_TESTING.md`.
 
-## Running
-1) Start SQL Server via Compose: `docker compose up -d sqlserver`
-2) Ensure DB exists: `docker exec todo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Ford123!" -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name='todo_db') CREATE DATABASE todo_db;"`
-3) Run API locally: `mvn spring-boot:run`
-   - Flyway está habilitado (`spring.flyway.enabled=true`) e aplica as migrations automaticamente na inicialização; basta que o banco `todo_db` exista.
-4) (Optional) All via Compose: `docker compose up -d --build`
+## Como rodar
+1) Subir SQL Server via Compose:
+```bash
+docker compose up -d sqlserver
+```
+2) Garantir DB existe:
+```bash
+docker exec todo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Ford123!" -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name='todo_db') CREATE DATABASE todo_db;"
+```
+3) Rodar API local:
+```bash
+mvn spring-boot:run
+```
+   - Flyway esta habilitado (`spring.flyway.enabled=true`) e aplica migrations automaticamente; basta o banco `todo_db`.
+4) (Opcional) Tudo via Compose:
+```bash
+docker compose up -d --build
+```
 
 API: `http://localhost:8080`  
-Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-Actuator (monitoring): `http://localhost:8080/actuator` (health is public; others require Bearer token)
+Swagger UI: `http://localhost:8080/swagger-ui/index.html`  
+Actuator: `http://localhost:8080/actuator` (health publico; demais exigem JWT)
 
-## Auth (JWT)
+## Autenticacao (JWT)
 - Login: `POST /api/auth/login` body `{"username":"admin","password":"admin123"}`
-- Response: `{"token":"<JWT>"}`
-- Use header `Authorization: Bearer <JWT>` on all protected endpoints.
-- No Swagger UI, clique em "Authorize", escolha `bearerAuth` e informe o token nesse formato: `Bearer <JWT>`.
+- Resposta: `{"token":"<JWT>"}`
+- Use `Authorization: Bearer <JWT>` em endpoints protegidos.
+- No Swagger UI clique em "Authorize" > `bearerAuth` e informe `Bearer <JWT>`.
 
-## Endpoints (curl examples)
-- Login (get token):
-```sh
+## Endpoints principais
+- Login (token):
+```bash
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```
-- Create task (example using token):
-```sh
+- Criar tarefa (com token):
+```bash
 curl -X POST http://localhost:8080/api/tasks \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT>" \
   -d '{"title":"Study","description":"Spring Boot","status":"PENDING"}'
 ```
-Use Swagger UI for the rest of the operations (list, get by id, put, patch, delete) with the same `Authorization: Bearer <JWT>` header.
+Use a Swagger UI para listar, buscar, atualizar e excluir tarefas.
 
 ## Actuator
-- Exposed endpoints: `health` (public), `info`, `metrics`, `env`, `httpexchanges`, `threaddump` (require JWT).
-- Base URL: `http://localhost:8080/actuator`
-- Example with token:  
-  `curl http://localhost:8080/actuator/metrics -H "Authorization: Bearer <JWT>"`
-
-## Logs
-- API: `docker compose logs -f todo-api`
-- DB: `docker compose logs -f sqlserver`
-
-## Tests
-```sh
-mvn test
+- Expostos: `health` (publico), `info`, `metrics`, `env`, `httpexchanges`, `threaddump` (com JWT).
+- Base: `http://localhost:8080/actuator`
+- Exemplo com token:
+```bash
+curl http://localhost:8080/actuator/metrics -H "Authorization: Bearer <JWT>"
 ```
 
-Requer Docker em execução para os testes de integração (Testcontainers com SQL Server).
+## Logs
+- API:
+```bash
+docker compose logs -f todo-api
+```
+- DB:
+```bash
+docker compose logs -f sqlserver
+```
 
-## CI/CD (GitHub Actions)
-`.github/workflows/ci.yml` runs `mvn clean verify`, builds Docker image, and publishes to GHCR (tags `latest` and commit SHA) on pushes to `main`.
-- Para publicar ao criar tags (ex. `v0.1.0`), adicione no gatilho `push: tags: ['v*']` e use a tag no build/push da imagem. Exemplo: `git checkout main && git pull && git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0`.
+## Testes
+```bash
+mvn test
+```
+Requer Docker em execucao para os testes de integracao (Testcontainers com SQL Server).
+
+## CI/CD
+- `Main CI - Build & Publish` (`.github/workflows/ci.yml`): `mvn clean verify`, build e push para GHCR em `main`.
+- `Dev CI - Build & Publish` (`.github/workflows/dev.yml`): mesmo fluxo para `develop`, publica tags `dev` e `dev-<sha>`.
+- `Release - Tag Build & Publish` (`.github/workflows/release.yml`): em tags `v*`, builda e publica imagens `:vX` e `:latest`.
 
 ## Git flow / commits
-- Branches: `main` (production), `develop` (integra develop), `feature/<name>` (cada demanda).
-- Fluxo resumido: criar branch `feature/...` a partir de `develop` -> desenvolver e commitar -> abrir PR para `develop` -> merge -> release para `main` quando pronto.
-- Commits: use prefixos semanticos `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`.
-- Ajuste de commits: reescrita de historico (squash/rebase) so manualmente via Git (`git rebase -i`) e alinhado com o time; nao automatizamos aqui.
 
-## Deploy / Infra (resumo)
-- ECS Fargate com ALB + RDS (SQL Server) está descrito em `terraform/` (custa: NAT, ALB e SQL Server). Só execute `terraform apply` se quiser realmente provisionar; o `plan` é suficiente para demonstrar conhecimento.
-- Para demo local sem custo, use `LOCALSTACK.md` (simula SSM/ECR) e o `docker-compose` já existente. O app roda localmente com SQL Server em contêiner; comandos `awslocal` mostram como faria param store/repos.
+| Item      | Descrição                                                                 |
+|-----------|---------------------------------------------------------------------------|
+| Branches  | `main` (producao), `develop` (integracao), `feature/<name>` (demanda), `release/<version>` (pre-release) |
+| Fluxo     | Criar branch a partir de `develop` -> desenvolver/commitar -> PR para `develop` -> merge -> release para `main` quando pronto |
+| Commits   | Prefixos `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`        |
+| Releases  | `release/vX.Y.Z` a partir de `develop`, PR para `main` e `develop`, tag `vX.Y.Z` na `main` |
+
+## Cloud opcional (LocalStack)
+Guia completo em [`LOCALSTACK_TESTING.md`](LOCALSTACK_TESTING.md) (subir LocalStack, credenciais dummy, defaults no `application.yml`, comandos `awslocal` para SSM/SQS).
+
+## Infra resumo
+- Terraform em `terraform/` descreve ECS Fargate + ALB + RDS (SQL Server). Gera custo real (NAT/ALB/RDS); use `terraform plan` para demonstrar, aplique apenas se quiser provisionar.
+- Ambiente local sem custo: `docker-compose.yml` para API + SQL Server. LocalStack opcional para SSM/SQS (veja `LOCALSTACK_TESTING.md`).

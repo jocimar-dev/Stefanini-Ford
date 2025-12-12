@@ -38,7 +38,6 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldHandleConstraintViolations() {
-        @SuppressWarnings("unchecked")
         ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
         jakarta.validation.Path path = Mockito.mock(jakarta.validation.Path.class);
         Mockito.when(path.toString()).thenReturn("task.title");
