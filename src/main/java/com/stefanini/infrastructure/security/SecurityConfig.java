@@ -17,7 +17,6 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 @Configuration
@@ -27,7 +26,6 @@ public class SecurityConfig {
     private final AppUserProperties userProps;
     private final JwtAuthenticationFilter jwtFilter;
 
-    @Autowired
     public SecurityConfig(AppUserProperties userProps, JwtAuthenticationFilter jwtFilter) {
         this.userProps = userProps;
         this.jwtFilter = jwtFilter;

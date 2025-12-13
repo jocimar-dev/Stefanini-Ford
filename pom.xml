@@ -12,6 +12,7 @@
   <properties>
     <java.version>17</java.version>
     <flyway.version>8.5.13</flyway.version>
+    <aws.sdk.version>2.25.60</aws.sdk.version>
   </properties>
 
   <parent>
@@ -42,6 +43,16 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>ssm</artifactId>
+      <version>${aws.sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sqs</artifactId>
+      <version>${aws.sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>

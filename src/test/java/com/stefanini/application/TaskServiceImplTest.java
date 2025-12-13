@@ -3,6 +3,7 @@ package com.stefanini.application;
 import com.stefanini.domain.Task;
 import com.stefanini.domain.TaskStatus;
 import com.stefanini.infrastructure.TaskRepository;
+import com.stefanini.infrastructure.messaging.TaskEventPublisher;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,9 @@ class TaskServiceImplTest {
 
     @Mock
     private TaskRepository taskRepository;
+
+    @Mock
+    private TaskEventPublisher taskEventPublisher;
 
     @InjectMocks
     private TaskServiceImpl taskService;
